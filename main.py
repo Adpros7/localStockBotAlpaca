@@ -86,7 +86,7 @@ async def main():
         try:
             bob = await Runner.run(
                 agent,
-                "best stocks to buy right now actual tickers not just sectors. JUST SAY THE TICKERS, ITS NOT THAT DEEP. ",
+                "best stocks to buy right now actual tickers not just sectors. JUST SAY THE TICKERS, ITS NOT THAT DEEP. include a risky play, but it can absolutely explode in gains ",
                 max_turns=None,
             )
             bob = bob.final_output_as(Reccomendations)
@@ -100,9 +100,9 @@ async def main():
             break
 
         except (
-            agents.exceptions.ModelBehaviorError
-            or ValueError
-            or pydantic_core._pydantic_core.ValidationError
+            agents.exceptions.ModelBehaviorError,
+            ValueError,
+            pydantic_core._pydantic_core.ValidationError,
         ):
             continue
 

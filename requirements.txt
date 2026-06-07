@@ -3,3 +3,5 @@ alpaca-py
 openai-agents
 openai
 pydantic_core
+matplotlib
+plotly

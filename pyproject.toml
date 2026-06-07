@@ -6,9 +6,11 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "alpaca-py>=0.43.4",
+    "matplotlib>=3.10.9",
     "ollama>=0.6.2",
     "openai>=2.41.0",
     "openai-agents>=0.17.4",
+    "plotly>=6.8.0",
     "pydantic>=2.13.4",
     "pydantic-core>=2.46.4",
 ]
