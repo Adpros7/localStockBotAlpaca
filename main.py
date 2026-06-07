@@ -1,6 +1,6 @@
 from asyncio import run
 import subprocess
-from typing import TypedDict
+from typing import Literal
 
 from agents import (
     Agent,
@@ -10,6 +10,7 @@ from agents import (
 )
 import agents
 from openai import AsyncOpenAI
+from pydantic import BaseModel, Field
 import pydantic_core
 
 
@@ -20,11 +21,15 @@ model = OpenAIChatCompletionsModel("gemma4", client)
 with open("./SKILL.md", "r") as f:
     skill = f.read()
 
+tool_uses = 0
+
 
 @function_tool
 def bash_command(full_command: str):
+    global tool_uses
     cmd = subprocess.run(full_command, capture_output=True, text=True, shell=True)
     print(full_command)
+    tool_uses += 1
     return cmd.stdout, cmd.stderr
 
 
@@ -46,6 +51,7 @@ Be concise
 USE YOUR TOOLS
 USE YOUR TOOLS
 If you don't use tools, you are wrong
+Mandatory tool uses of at least 5
  ALways keep trying at least 5 times with different combinations and things, and use the browser-use skill.
 Look at your tool options before using any. Be very verbose about which tools you used, why, and if they failed. 
  Use bash to run browser-use commands. 
@@ -55,8 +61,15 @@ Look at your tool options before using any. Be very verbose about which tools yo
  MOST IMPORTANT PART HERE IS HOW TO USE BROWSER USE SKILL: browser use skill: {skill} THIS IS THE MLOST IMPORTANT THING THIS IS DOCUMENTATION FOR browser-use"""
 
 
-class Reccomendations(TypedDict):
-    reccomendations: list[str]
+class Recommendation(BaseModel):
+    ticker: str
+    reason: str
+    risk: Literal["Low", "Medium", "High"]
+    expected_gain: float = Field(ge=1, le=100.0)
+
+
+class Reccomendations(BaseModel):
+    reccomendations: list[Recommendation]
 
 
 agent = Agent(
@@ -73,13 +86,15 @@ async def main():
         try:
             bob = await Runner.run(
                 agent,
-                "best stocks to buy right now actual tickers not just sectors. JUST SAY THE TICKERS, ITS NOT THAT DEEP.",
+                "best stocks to buy right now actual tickers not just sectors. JUST SAY THE TICKERS, ITS NOT THAT DEEP. ",
                 max_turns=None,
             )
-            bob = bob.final_output
-            if bob["reccomendations"] == [] or [
-                i for i in bob["reccomendations"] if len(i) > 15
-            ]:
+            bob = bob.final_output_as(Reccomendations)
+            if (
+                bob.reccomendations == []
+                or [i for i in bob.reccomendations if len(i.ticker) > 15]
+                or tool_uses < 5
+            ):
                 raise ValueError
             print(bob)
             break
