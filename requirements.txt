@@ -1,0 +1,4 @@
+ollama
+alpaca-py
+openai-agents
+openai
