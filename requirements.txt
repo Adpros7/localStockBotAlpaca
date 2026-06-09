@@ -5,3 +5,5 @@ openai
 pydantic_core
 matplotlib
 plotly
+ipython
+nbformatw
