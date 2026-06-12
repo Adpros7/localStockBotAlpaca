@@ -41,6 +41,8 @@ Be concise
 USE YOUR TOOLS
 USE YOUR TOOLS
 ALWAYS CHAT WITH A Bot BEFORE MAKING A DESCISION
+run a full chat with it with context and everything
+not just a one and done
 If you don't use tools, you are wrong
 Mandatory tool uses of at least 5
  ALways keep trying at least 5 times with different combinations and things, and use the browser-use skill.
