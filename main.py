@@ -23,16 +23,6 @@ with open("./SKILL.md", "r") as f:
 
 tool_uses = 0
 
-
-@function_tool
-def bash_command(full_command: str):
-    global tool_uses
-    cmd = subprocess.run(full_command, capture_output=True, text=True, shell=True)
-    print(full_command)
-    tool_uses += 1
-    return cmd.stdout, cmd.stderr
-
-
 instructions = f"""
 You are a expert stock bot who is perfect at making trades, has never made a mistake, and has made his clients $999999999999 in just one year.
 This is paper trading so don't worry.
@@ -50,6 +40,7 @@ The user cannot talk back to you
 Be concise
 USE YOUR TOOLS
 USE YOUR TOOLS
+ALWAYS CHAT WITH A Bot BEFORE MAKING A DESCISION
 If you don't use tools, you are wrong
 Mandatory tool uses of at least 5
  ALways keep trying at least 5 times with different combinations and things, and use the browser-use skill.
@@ -61,11 +52,33 @@ Look at your tool options before using any. Be very verbose about which tools yo
  MOST IMPORTANT PART HERE IS HOW TO USE BROWSER USE SKILL: browser use skill: {skill} THIS IS THE MLOST IMPORTANT THING THIS IS DOCUMENTATION FOR browser-use"""
 
 
+@function_tool
+async def bash_command(full_command: str) -> tuple[str, str]:
+    global tool_uses
+    cmd: subprocess.CompletedProcess[str] = subprocess.run(args=full_command, capture_output=True, text=True, shell=True)
+    print(full_command)
+    tool_uses += 1
+    return cmd.stdout, cmd.stderr
+
+
+@function_tool
+async def chat_with_bot(prompt) -> str:
+    callagent = Agent(
+        name="gemma4",
+        model=model,
+        tools=[bash_command],
+        instructions=instructions,
+    )
+    output: agents.RunResult = await Runner().run(callagent, input=prompt)
+    print(prompt, output.final_output)
+    return output.final_output
+
+
 class Recommendation(BaseModel):
     ticker: str
     reason: str
     risk: Literal["Low", "Medium", "High"]
-    expected_gain: float = Field(ge=1, le=100.0)
+    expected_gain_percent: float = Field(ge=1, le=100.0)
 
 
 class Reccomendations(BaseModel):
@@ -84,9 +97,9 @@ agent = Agent(
 async def main():
     while True:
         try:
-            bob = await Runner.run(
-                agent,
-                "best stocks to buy right now actual tickers not just sectors. JUST SAY THE TICKERS, ITS NOT THAT DEEP. include a risky play, but it can absolutely explode in gains ",
+            bob: agents.RunResult | Reccomendations = await Runner.run(
+                starting_agent=agent,
+                input="best stocks to buy right now actual tickers not just sectors. JUST SAY THE TICKERS, ITS NOT THAT DEEP. include a risky play, but it can absolutely explode in gains ",
                 max_turns=None,
             )
             bob = bob.final_output_as(Reccomendations)
